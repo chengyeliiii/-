@@ -527,7 +527,6 @@
                 }
             });
         });
-
         db.version(9).stores({ 
             chats: '&id, isGroup', 
             apiConfig: '&id', 
@@ -537,7 +536,6 @@
             musicLibrary: '&id', 
             personaPresets: '&id'
         });
-
 
         let state = { chats: {}, activeChatId: null, globalSettings: {}, apiConfig: {}, userStickers: [], worldBooks: [], personaPresets: [] };
         let musicState = { isActive: false, activeChatId: null, isPlaying: false, playlist: [], currentIndex: -1, playMode: 'order', totalElapsedTime: 0, timerId: null };
@@ -629,7 +627,7 @@
         function renderApiSettings() { document.getElementById('proxy-url').value = state.apiConfig.proxyUrl || ''; document.getElementById('api-key').value = state.apiConfig.apiKey || ''; }
         window.renderApiSettingsProxy = renderApiSettings;
         
-        function renderChatList() { const chatListEl = document.getElementById('chat-list'); chatListEl.innerHTML = ''; if (Object.keys(state.chats).length === 0) { chatListEl.innerHTML = '<p style="text-align:center; color: #8a8a8a; margin-top: 50px;">点击右上角 "+" 或群组图标添加聊天</p>'; return; } Object.values(state.chats).sort((a,b) => (b.history.slice(-1)[0]?.timestamp || 0) - (a.history.slice(-1)[0]?.timestamp || 0)).forEach(chat => { const lastMsgObj = chat.history.slice(-1)[0] || {}; let lastMsgDisplay = String(lastMsgObj.content || '...').substring(0, 20); if (typeof lastMsgObj.content === 'string') { if (lastMsgObj.content.startsWith('[转账')) { lastMsgDisplay = '[转账]'; } else if (lastMsgObj.content.startsWith('[图片')) { lastMsgDisplay = '[图片]'; } else if (lastMsgObj.content.startsWith('[语音')) { lastMsgDisplay = '[语音]'; } else if (STICKER_REGEX.test(lastMsgObj.content)) { lastMsgDisplay = lastMsgObj.meaning ? `[表情: ${lastMsgObj.meaning}]` : '[表情]'; } } else if (Array.isArray(lastMsgObj.content)) { lastMsgDisplay = `[图片]`; } if (chat.isGroup && lastMsgObj.role === 'assistant' && lastMsgObj.senderId) { const member = chat.members.find(m => m.id === lastMsgObj.senderId); const senderName = member ? member.name : '未知成员'; lastMsgDisplay = `${senderName}: ${lastMsgDisplay}`; } const item = document.createElement('div'); item.className = 'chat-list-item'; item.dataset.chatId = chat.id; const avatar = chat.isGroup ? chat.settings.groupAvatar : chat.settings.aiAvatar; item.innerHTML = `<img src="${avatar || defaultAvatar}" class="avatar"><div class="info"><div class="name-line"><span class="name">${chat.name}</span>${chat.isGroup ? '<span class="group-tag">群聊</span>' : ''}</div><div class="last-msg">${lastMsgDisplay}</div></div>`; item.addEventListener('click', async () => { openChat(chat.id); }); addLongPressListener(item, async (e) => { const confirmed = await showCustomConfirm('删除对话', `确定要删除与 "${chat.name}" 的整个对话吗？此操作不可撤销。`, { confirmButtonClass: 'btn-danger' }); if (confirmed) { try { if (musicState.isActive && musicState.activeChatId === chat.id) await endListenTogetherSession(false); delete state.chats[chat.id]; if (state.activeChatId === chat.id) state.activeChatId = null; await db.chats.delete(chat.id); renderChatList(); } catch (error) { console.error("删除聊天失败:", error); alert("删除失败，请稍后再试。"); } } }); chatListEl.appendChild(item); }); }
+        function renderChatList() { const chatListEl = document.getElementById('chat-list'); chatListEl.innerHTML = ''; if (Object.keys(state.chats).length === 0) { chatListEl.innerHTML = '<p style="text-align:center; color: #8a8a8a; margin-top: 50px;">点击右上角 "+" 或群组图标添加聊天</p>'; return; } Object.values(state.chats).sort((a,b) => (b.history.slice(-1)[0]?.timestamp || 0) - (a.history.slice(-1)[0]?.timestamp || 0)).forEach(chat => { const lastMsgObj = chat.history.slice(-1)[0] || {}; let lastMsgDisplay = String(lastMsgObj.content || '...').substring(0, 20); if (typeof lastMsgObj.content === 'string') { if (lastMsgObj.content.includes('转账')) { lastMsgDisplay = '[转账]'; } else if (lastMsgObj.content.includes('图片')) { lastMsgDisplay = '[图片]'; } else if (lastMsgObj.content.includes('语音')) { lastMsgDisplay = '[语音]'; } else if (STICKER_REGEX.test(lastMsgObj.content)) { lastMsgDisplay = lastMsgObj.meaning ? `[表情: ${lastMsgObj.meaning}]` : '[表情]'; } } else if (Array.isArray(lastMsgObj.content)) { lastMsgDisplay = `[图片]`; } if (chat.isGroup && lastMsgObj.role === 'assistant' && lastMsgObj.senderId) { const member = chat.members.find(m => m.id === lastMsgObj.senderId); const senderName = member ? member.name : '未知成员'; lastMsgDisplay = `${senderName}: ${lastMsgDisplay}`; } const item = document.createElement('div'); item.className = 'chat-list-item'; item.dataset.chatId = chat.id; const avatar = chat.isGroup ? chat.settings.groupAvatar : chat.settings.aiAvatar; item.innerHTML = `<img src="${avatar || defaultAvatar}" class="avatar"><div class="info"><div class="name-line"><span class="name">${chat.name}</span>${chat.isGroup ? '<span class="group-tag">群聊</span>' : ''}</div><div class="last-msg">${lastMsgDisplay}</div></div>`; item.addEventListener('click', async () => { openChat(chat.id); }); addLongPressListener(item, async (e) => { const confirmed = await showCustomConfirm('删除对话', `确定要删除与 "${chat.name}" 的整个对话吗？此操作不可撤销。`, { confirmButtonClass: 'btn-danger' }); if (confirmed) { try { if (musicState.isActive && musicState.activeChatId === chat.id) await endListenTogetherSession(false); delete state.chats[chat.id]; if (state.activeChatId === chat.id) state.activeChatId = null; await db.chats.delete(chat.id); renderChatList(); } catch (error) { console.error("删除聊天失败:", error); alert("删除失败，请稍后再试。"); } } }); chatListEl.appendChild(item); }); }
         window.renderChatListProxy = renderChatList;
         
         function renderChatInterface(chatId) { const chat = state.chats[chatId]; if (!chat) return; exitSelectionMode(); const messagesContainer = document.getElementById('chat-messages'); messagesContainer.dataset.theme = chat.settings.theme || 'default'; document.getElementById('chat-header-title').textContent = chat.name; messagesContainer.innerHTML = ''; const chatScreen = document.getElementById('chat-interface-screen'); chatScreen.style.backgroundImage = chat.settings.background ? `url(${chat.settings.background})` : 'none'; chatScreen.style.backgroundColor = chat.settings.background ? 'transparent' : '#f0f2f5'; const history = chat.history; const totalMessages = history.length; currentRenderedCount = 0; const initialMessages = history.slice(-MESSAGE_RENDER_WINDOW); initialMessages.forEach(msg => appendMessage(msg, chat, true)); currentRenderedCount = initialMessages.length; if (totalMessages > currentRenderedCount) { prependLoadMoreButton(messagesContainer); } const typingIndicator = document.createElement('div'); typingIndicator.id = 'typing-indicator'; typingIndicator.style.display = 'none'; typingIndicator.textContent = '对方正在输入...'; messagesContainer.appendChild(typingIndicator); setTimeout(() => messagesContainer.scrollTop = messagesContainer.scrollHeight, 0); }
@@ -644,7 +642,9 @@
         function openWorldBookEditor(bookId) { editingWorldBookId = bookId; const book = state.worldBooks.find(wb => wb.id === bookId); if (!book) return; document.getElementById('world-book-editor-title').textContent = book.name; document.getElementById('world-book-name-input').value = book.name; document.getElementById('world-book-content-input').value = book.content; showScreen('world-book-editor-screen'); }
         function renderStickerPanel() { const grid = document.getElementById('sticker-grid'); grid.innerHTML = ''; if (state.userStickers.length === 0) { grid.innerHTML = '<p style="text-align:center; color: var(--text-secondary); grid-column: 1 / -1;">大人请点击右上角“添加”或“上传”来添加你的第一个表情吧！</p>'; return; } state.userStickers.forEach(sticker => { const item = document.createElement('div'); item.className = 'sticker-item'; item.style.backgroundImage = `url(${sticker.url})`; item.title = sticker.name; item.addEventListener('click', () => sendSticker(sticker)); addLongPressListener(item, () => { if (isSelectionMode) return; const existingDeleteBtn = item.querySelector('.delete-btn'); if (existingDeleteBtn) return; const deleteBtn = document.createElement('div'); deleteBtn.className = 'delete-btn'; deleteBtn.innerHTML = '&times;'; deleteBtn.onclick = async (e) => { e.stopPropagation(); const confirmed = await showCustomConfirm('删除表情', `确定要删除表情 "${sticker.name}" 吗？`, { confirmButtonClass: 'btn-danger' }); if (confirmed) { await db.userStickers.delete(sticker.id); state.userStickers = state.userStickers.filter(s => s.id !== sticker.id); renderStickerPanel(); } }; item.appendChild(deleteBtn); deleteBtn.style.display = 'block'; setTimeout(() => item.addEventListener('mouseleave', () => deleteBtn.remove(), { once: true }), 3000); }); grid.appendChild(item); }); }
         
-        const specialMessageRenderers = [ { regex: /^$$图片(?::\s*(.*?))?$$$/, render: (match) => { const description = match[1] || "一张图片"; return { bubbleClass: 'is-special', html: `<img src="https://i.postimg.cc/KYr2qRCK/1.jpg" class="ai-generated-image" alt="${description}" data-description="${description}">` }; } }, { regex: /^$$语音(?::\s*(.*?))?$$$/, render: (match) => { const textContent = match[1] || " "; const duration = Math.max(1, Math.round(textContent.length / 5)); const durationFormatted = `0:${String(duration).padStart(2, '0')}''`; const waveformHTML = '<div></div>'.repeat(5); return { bubbleClass: 'is-special', html: `<div class="voice-message-body" data-text="${textContent}"><div class="voice-waveform">${waveformHTML}</div><span class="voice-duration">${durationFormatted}</span></div>` }; } }, { regex: /^$$转账:\s*([\d.]+)\s*(?:,\s*(.*?))?$$$/, render: (match, isUser) => { const amount = parseFloat(match[1]).toFixed(2); const note = match[2] || (isUser ? '给你的一点小心意~' : '对方没有留下备注哦~'); const titleText = isUser ? '转账给Ta' : '收到一笔转账'; const heartIcon = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="vertical-align: middle;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>`; return { bubbleClass: 'is-special', html: `<div class="transfer-card" data-amount="${amount}" data-note="${note}"><div class="transfer-title">${heartIcon} ${titleText}</div><div class="transfer-amount">¥ ${amount}</div><div class="transfer-note">${note}</div></div>` }; } } ];
+        // **核心修改：分离 User 和 AI 的正则规则**
+        const aiSpecialMessageRenderers = [ { regex: /^$$图片:\s*(.*?)$$$/, render: (match) => ({ bubbleClass: 'is-special', html: `<img src="https://i.postimg.cc/KYr2qRCK/1.jpg" class="ai-generated-image" alt="${match[1]}" data-description="${match[1]}">` }) }, { regex: /^$$语音:\s*(.*?)$$$/, render: (match) => { const textContent = match[1] || " "; const duration = Math.max(1, Math.round(textContent.length / 5)); const durationFormatted = `0:${String(duration).padStart(2, '0')}''`; return { bubbleClass: 'is-special', html: `<div class="voice-message-body" data-text="${textContent}"><div class="voice-waveform">${'<div></div>'.repeat(5)}</div><span class="voice-duration">${durationFormatted}</span></div>` }; } }, { regex: /^$$转账:\s*([\d.]+)\s*(?:,\s*(.*?))?$$$/, render: (match) => { const amount = parseFloat(match[1]).toFixed(2); const note = match[2] || '对方没有留下备注哦~'; return { bubbleClass: 'is-special', html: `<div class="transfer-card" data-amount="${amount}" data-note="${note}"><div class="transfer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg> 收到一笔转账</div><div class="transfer-amount">¥ ${amount}</div><div class="transfer-note">${note}</div></div>` }; } } ];
+        const userSpecialMessageRenderers = [ { regex: /^$$用户向你发送了一张照片:\s*(.*?)$$$/, render: (match) => ({ bubbleClass: 'is-special', html: `<img src="https://i.postimg.cc/KYr2qRCK/1.jpg" class="ai-generated-image" alt="${match[1]}" data-description="${match[1]}">` }) }, { regex: /^$$用户向你发送了一条语音:\s*(.*?)$$$/, render: (match) => { const textContent = match[1] || " "; const duration = Math.max(1, Math.round(textContent.length / 5)); const durationFormatted = `0:${String(duration).padStart(2, '0')}''`; return { bubbleClass: 'is-special', html: `<div class="voice-message-body" data-text="${textContent}"><div class="voice-waveform">${'<div></div>'.repeat(5)}</div><span class="voice-duration">${durationFormatted}</span></div>` }; } }, { regex: /^$$用户向你转账:\s*([\d.]+)\s*(?:,\s*(.*?))?$$$/, render: (match) => { const amount = parseFloat(match[1]).toFixed(2); const note = match[2] || '给你的一点小心意~'; return { bubbleClass: 'is-special', html: `<div class="transfer-card" data-amount="${amount}" data-note="${note}"><div class="transfer-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg> 转账给Ta</div><div class="transfer-amount">¥ ${amount}</div><div class="transfer-note">${note}</div></div>` }; } } ];
         
         function createMessageElement(msg, chat) {
             const isUser = msg.role === 'user';
@@ -671,11 +671,14 @@
             bubble.dataset.timestamp = msg.timestamp;
             let contentHtml;
             let specialRendered = false;
+            
             if (typeof msg.content === 'string') {
-                for (const renderer of specialMessageRenderers) {
+                // **核心修改：根据角色选择不同的正则**
+                const renderers = isUser ? userSpecialMessageRenderers : aiSpecialMessageRenderers;
+                for (const renderer of renderers) {
                     const match = msg.content.match(renderer.regex);
                     if (match) {
-                        const result = renderer.render(match, isUser);
+                        const result = renderer.render(match);
                         contentHtml = result.html;
                         bubble.classList.add(result.bubbleClass);
                         specialRendered = true;
@@ -749,7 +752,6 @@ ${membersList}
                     return { role: 'user', content: `${sender}: ${contentText}` }; 
                 }); 
             } else { 
-                // **这里是为你恢复的、详细的单聊提示词！**
                 systemPrompt = `你现在扮演一个名为"${chat.name}"的角色。
 
 # **核心规则 (必须严格遵守)**
@@ -764,7 +766,7 @@ ${membersList}
 - **情景**: ${musicContext}
 
 # **如何处理特殊消息 (重要!)**
-- **理解用户消息**: 当历史记录中出现形如 \`[用户...]\` 的提示时，代表用户发送了特殊消息，你**必须**对其内容作出自然的回应。例如，对 \`[用户发送了图片: 一只小狗在玩球]\` 做出“好可爱的小狗！”这样的反应；对 \`[用户发来了转账...]\` 表示感谢或惊讶。
+- **理解用户消息**: 当历史记录中出现形如 \`[用户...]\` 的提示时，代表用户发送了特殊消息，你**必须**对其内容作出自然的回应。例如，对 \`[用户向你发送了一张照片: 一只小狗在玩球]\` 做出“好可爱的小狗！”这样的反应；对 \`[用户向你转账...]\` 表示感谢或惊讶。
 - **使用你的能力**: 你无法发送真正的文件，但可以模拟发送。请严格按照以下**纯文本格式**，将它们作为JSON数组中的一个字符串元素来回复：
   - **发送图片**: \`[图片: 这里是对图片的详细文字描述...]\`
   - **发送语音**: \`[语音: 这里是语音的文字内容...]\`
@@ -774,26 +776,7 @@ ${membersList}
   - **使用你的表情**: 你可以根据自己的人设和世界书中的设定来发送表情包，让对话更生动。**表情包的格式就是它在世界书里被定义的样子**。如果人设或世界书没有规定表情包格式，则不发送。
 
 现在，请根据以上所有规则和下面的对话历史，继续这场对话。`; 
-                
-                messagesPayload = historySlice.map(msg => {
-                    let content;
-                    if (Array.isArray(msg.content)) {
-                        content = "[用户发送了一张真实图片，请对此作出反应]";
-                    } else if (msg.meaning) {
-                        content = `[用户发送了一个表情，意思是：'${msg.meaning}']`;
-                    } else {
-                        // 将我方的特殊消息也转为文字提示，让AI更好地理解上下文
-                        if (typeof msg.content === 'string') {
-                            if(msg.content.startsWith('[图片:')) content = `[用户发送了图片: ${msg.content.slice(4, -1)}]`;
-                            else if(msg.content.startsWith('[语音:')) content = `[用户发来了语音: ${msg.content.slice(4, -1)}]`;
-                            else if(msg.content.startsWith('[转账:')) content = `[用户发来了转账: ${msg.content.slice(4, -1)}]`;
-                            else content = msg.content;
-                        } else {
-                           content = msg.content;
-                        }
-                    }
-                    return { role: msg.role, content: content };
-                });
+                messagesPayload = historySlice.map(msg => ({ role: msg.role, content: Array.isArray(msg.content) ? "[用户发送了一张真实图片，请对此作出反应]" : (msg.meaning ? `[用户发送了一个表情，意思是：'${msg.meaning}']` : msg.content) }));
             }
             try { const response = await fetch(`${proxyUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: systemPrompt }, ...messagesPayload], temperature: 0.8, stream: false }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(`API Error: ${response.status} - ${errorData.error.message}`); } const data = await response.json(); const aiResponseContent = data.choices[0].message.content; const messagesArray = parseAiResponse(aiResponseContent); let notificationShown = false; const isViewingThisChat = document.getElementById('chat-interface-screen').classList.contains('active') && state.activeChatId === chatId; 
             for (const msgData of messagesArray) { 
@@ -828,7 +811,8 @@ ${membersList}
             } 
             } catch (error) { const errorContent = `[出错了: ${error.message}]`; const errorMessage = { role: 'assistant', content: errorContent, timestamp: Date.now() }; if(chat.isGroup) { errorMessage.senderId = chat.members[0]?.id || 'error_sender'; } chat.history.push(errorMessage); await db.chats.put(chat); appendMessage(errorMessage, chat); } finally { document.getElementById('typing-indicator').style.display = 'none'; renderChatList(); } }
         async function sendSticker(sticker) { if (!state.activeChatId) return; const chat = state.chats[state.activeChatId]; const msg = { role: 'user', content: sticker.url, meaning: sticker.name, timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); document.getElementById('sticker-panel').classList.remove('visible'); }
-        async function sendUserTransfer() { if (!state.activeChatId) return; const amountInput = document.getElementById('transfer-amount'); const noteInput = document.getElementById('transfer-note'); const amount = parseFloat(amountInput.value); let note = noteInput.value.trim(); if (isNaN(amount) || amount < 0 || amount > 9999) { alert('请输入有效的金额 (0 到 9999 之间)！'); return; } const chat = state.chats[state.activeChatId]; const content = `[转账: ${amount.toFixed(2)}${note ? ', ' + note : ''}]`; const msg = { role: 'user', content: content, timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); document.getElementById('transfer-modal').classList.remove('visible'); amountInput.value = ''; noteInput.value = ''; }
+        async function sendUserSpecialMessage(content) { if (!state.activeChatId) return; const chat = state.chats[state.activeChatId]; const msg = { role: 'user', content: content, timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); }
+
         function enterSelectionMode(initialMsgTimestamp) { if (isSelectionMode) return; isSelectionMode = true; document.getElementById('chat-interface-screen').classList.add('selection-mode'); toggleMessageSelection(initialMsgTimestamp); }
         function exitSelectionMode() { if (!isSelectionMode) return; isSelectionMode = false; document.getElementById('chat-interface-screen').classList.remove('selection-mode'); selectedMessages.forEach(ts => { const bubble = document.querySelector(`.message-bubble[data-timestamp="${ts}"]`); if (bubble) bubble.classList.remove('selected'); }); selectedMessages.clear(); }
         function toggleMessageSelection(timestamp) { const bubble = document.querySelector(`.message-bubble[data-timestamp="${timestamp}"]`); if (!bubble) return; if (selectedMessages.has(timestamp)) { selectedMessages.delete(timestamp); bubble.classList.remove('selected'); } else { selectedMessages.add(timestamp); bubble.classList.add('selected'); } document.getElementById('selection-count').textContent = `已选 ${selectedMessages.size} 条`; if (selectedMessages.size === 0) exitSelectionMode(); }
@@ -885,7 +869,7 @@ ${membersList}
             
             document.getElementById('transfer-btn').addEventListener('click', () => document.getElementById('transfer-modal').classList.add('visible'));
             document.getElementById('transfer-cancel-btn').addEventListener('click', () => document.getElementById('transfer-modal').classList.remove('visible'));
-            document.getElementById('transfer-confirm-btn').addEventListener('click', sendUserTransfer);
+            document.getElementById('transfer-confirm-btn').addEventListener('click', async () => { const amountInput = document.getElementById('transfer-amount'); const noteInput = document.getElementById('transfer-note'); const amount = parseFloat(amountInput.value); let note = noteInput.value.trim(); if (isNaN(amount) || amount <= 0 || amount > 9999) { alert('请输入有效的金额 (0 到 9999 之间)！'); return; } const content = `[用户向你转账: ${amount.toFixed(2)}${note ? ', ' + note : ''}]`; await sendUserSpecialMessage(content); document.getElementById('transfer-modal').classList.remove('visible'); amountInput.value = ''; noteInput.value = ''; });
 
             document.getElementById('listen-together-btn').addEventListener('click', handleListenTogetherClick);
             document.getElementById('music-exit-btn').addEventListener('click', () => endListenTogetherSession(true));
@@ -904,7 +888,7 @@ ${membersList}
             audioPlayer.addEventListener('play', () => { if(musicState.isActive) { musicState.isPlaying = true; updatePlayerUI(); } });
             
             const chatInput = document.getElementById('chat-input');
-            document.getElementById('send-btn').addEventListener('click', async () => { const content = chatInput.value.trim(); if (!content || !state.activeChatId) return; const chat = state.chats[state.activeChatId]; const msg = { role: 'user', content, timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); chatInput.value = ''; chatInput.style.height = 'auto'; chatInput.focus(); });
+            document.getElementById('send-btn').addEventListener('click', async () => { const content = chatInput.value.trim(); if (!content || !state.activeChatId) return; await sendUserSpecialMessage(content); chatInput.value = ''; chatInput.style.height = 'auto'; chatInput.focus(); });
             document.getElementById('wait-reply-btn').addEventListener('click', triggerAiResponse);
             chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('send-btn').click(); } });
             chatInput.addEventListener('input', () => { chatInput.style.height = 'auto'; chatInput.style.height = (chatInput.scrollHeight) + 'px'; });
@@ -952,8 +936,8 @@ ${membersList}
             document.getElementById('upload-image-btn').addEventListener('click', () => document.getElementById('image-upload-input').click());
             document.getElementById('image-upload-input').addEventListener('change', async (event) => { const file = event.target.files[0]; if (!file || !state.activeChatId) return; const reader = new FileReader(); reader.onload = async (e) => { const base64Url = e.target.result; const chat = state.chats[state.activeChatId]; const msg = { role: 'user', content: [{ type: 'image_url', image_url: { url: base64Url } }], timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); }; reader.readAsDataURL(file); event.target.value = null; });
             
-            document.getElementById('voice-message-btn').addEventListener('click', async () => { if (!state.activeChatId) return; const text = await showCustomPrompt("发送语音", "请输入你想说的内容："); if (text && text.trim()) { const chat = state.chats[state.activeChatId]; const msg = { role: 'user', content: `[语音: ${text.trim()}]`, timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); } });
-            document.getElementById('send-photo-btn').addEventListener('click', async () => { if (!state.activeChatId) return; const description = await showCustomPrompt("发送照片", "请用文字描述您要发送的照片："); if (description && description.trim()) { const chat = state.chats[state.activeChatId]; const msg = { role: 'user', content: `[图片: ${description.trim()}]`, timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); } });
+            document.getElementById('voice-message-btn').addEventListener('click', async () => { const text = await showCustomPrompt("发送语音", "请输入你想说的内容："); if (text && text.trim()) await sendUserSpecialMessage(`[用户向你发送了一条语音: ${text.trim()}]`); });
+            document.getElementById('send-photo-btn').addEventListener('click', async () => { const description = await showCustomPrompt("发送照片", "请用文字描述您要发送的照片："); if (description && description.trim()) await sendUserSpecialMessage(`[用户向你发送了一张照片: ${description.trim()}]`); });
             
             document.getElementById('open-persona-library-btn').addEventListener('click', openPersonaLibrary);
             document.getElementById('close-persona-library-btn').addEventListener('click', closePersonaLibrary);
