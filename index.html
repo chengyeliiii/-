@@ -630,14 +630,81 @@
     </div>
     
     <!-- Modals -->
-    <div id="chat-settings-modal" class="modal"> ... </div>
-    <div id="persona-library-modal" class="modal"> ... </div>
-    <div id="persona-editor-modal" class="modal"> ... </div>
-    <div id="member-settings-modal" class="modal"> ... </div>
-    <div id="custom-modal-overlay"> ... </div>
-    <div id="preset-actions-modal" class="modal"> ... </div>
-    <div id="transfer-modal"> ... </div>
-    <div id="battery-alert-modal"> ... </div>
+    <div id="chat-settings-modal" class="modal"><div class="modal-content"><div class="modal-header"><span>聊天设置</span></div><div class="modal-body"><div class="form-group" id="chat-name-group"><label for="chat-name-input">备注名 / 群名</label><input type="text" id="chat-name-input"></div><div class="form-group" id="my-group-nickname-group"><label for="my-group-nickname-input">我的群昵称</label><input type="text" id="my-group-nickname-input"></div><div class="form-group" id="group-avatar-group"><label>群头像</label><div class="avatar-upload"><img id="group-avatar-preview"><button onclick="document.getElementById('group-avatar-input').click()">上传群头像</button><input type="file" id="group-avatar-input" accept="image/*"></div></div>
+            <div class="form-group" id="world-book-link-group">
+                <label>关联世界书 (可多选)</label>
+                <div class="custom-multiselect">
+                    <div class="select-box">
+                        <span class="selected-options-text">-- 点击选择 --</span>
+                        <span class="arrow-down">▼</span>
+                    </div>
+                    <div id="world-book-checkboxes-container" class="checkboxes-container">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group" id="ai-persona-group"><label for="ai-persona">对方人设 (AI Persona)</label><textarea id="ai-persona" rows="3"></textarea></div><div class="form-group" id="ai-avatar-group"><label>对方头像</label><div class="avatar-upload"><img id="ai-avatar-preview"><button onclick="document.getElementById('ai-avatar-input').click()">上传对方头像</button><input type="file" id="ai-avatar-input" accept="image/*"></div></div><div class="form-group" id="my-persona-group"><label for="my-persona">我的人设 (My Persona)</label><textarea id="my-persona" rows="3"></textarea></div><div class="form-group" id="my-avatar-group"><label>我的头像</label><div class="avatar-upload"><img id="my-avatar-preview"><button onclick="document.getElementById('my-avatar-input').click()">上传我的头像</button><button id="open-persona-library-btn">预设</button><input type="file" id="my-avatar-input" accept="image/*"></div></div><div class="form-group" id="group-members-group"><label>群成员人设</label><div id="group-members-settings"></div></div><div class="form-group"><label for="max-memory">上下文记忆条数</label><input type="number" id="max-memory" value="10"></div><div class="form-group"><label>聊天气泡主题 <button id="reset-theme-btn" type="button">重置</button></label><div class="theme-selector"><label><input type="radio" name="theme-select" value="default" id="theme-default"> 默认</label><label><input type="radio" name="theme-select" value="pink_blue"> 粉蓝</label><label><input type="radio" name="theme-select" value="blue_white"> 蓝白</label><label><input type="radio" name="theme-select" value="purple_yellow"> 紫黄</label><label><input type="radio" name="theme-select" value="black_white"> 黑白</label><label><input type="radio" name="theme-select" value="yellow_white"> 黄白</label><label><input type="radio" name="theme-select" value="red_black"> 红黑</label><label><input type="radio" name="theme-select" value="blue_yellow"> 蓝黄</label><label><input type="radio" name="theme-select" value="pink_yellow"> 粉黄</label><label><input type="radio" name="theme-select" value="pink_purple"> 粉紫</label><label><input type="radio" name="theme-select" value="gray_white"> 灰白</label><label><input type="radio" name="theme-select" value="blue_green"> 蓝绿</label><label><input type="radio" name="theme-select" value="pink_white"> 粉白</label><label><input type="radio" name="theme-select" value="pink_black"> 粉黑</label><label><input type="radio" name="theme-select" value="pink_green"> 粉绿</label><label><input type="radio" name="theme-select" value="green_black"> 绿黑</label></div></div>
+            <div class="form-group">
+                <label>聊天背景</label>
+                <div class="bg-upload-container">
+                    <button type="button" class="form-button-secondary" style="width: auto; padding: 8px 12px; margin-top: 0;" onclick="document.getElementById('bg-input').click()">上传背景图</button>
+                    <button type="button" id="remove-bg-btn">移除背景</button>
+                </div>
+                <img id="bg-preview" class="bg-preview-img">
+                <input type="file" id="bg-input" accept="image/*" style="display: none;">
+            </div>
+            <hr style="margin: 25px 0; border: none; border-top: 1px solid #eee;"><button class="form-button form-button-secondary" id="clear-chat-btn">清空聊天记录</button></div><div class="modal-footer"><button class="cancel" id="cancel-chat-settings-btn">取消</button><button class="save" id="save-chat-settings-btn">保存</button></div></div></div>
+    
+    <div id="persona-library-modal" class="modal"><div class="modal-content"><div class="modal-header"><span>我的人设库</span><button id="add-persona-preset-btn" class="action-button">添加</button></div><div class="modal-body"><div id="persona-library-grid"></div></div><div class="modal-footer"><button class="cancel" id="close-persona-library-btn">关闭</button></div></div></div>
+    
+    <div id="persona-editor-modal" class="modal"><div class="modal-content"><div class="modal-header"><span id="persona-editor-title">添加人设预设</span></div><div class="modal-body"><div class="form-group"><label>预设头像</label><div class="avatar-upload"><img id="preset-avatar-preview"><button onclick="document.getElementById('preset-avatar-input').click()">上传头像</button><input type="file" id="preset-avatar-input" accept="image/*"></div></div><div class="form-group"><label for="preset-persona-input">预设人设</label><textarea id="preset-persona-input" rows="4" placeholder="在此输入这个人设的详细设定..."></textarea></div></div><div class="modal-footer"><button class="cancel" id="cancel-persona-editor-btn">取消</button><button class="save" id="save-persona-preset-btn">保存</button></div></div></div>
+
+    <div id="member-settings-modal" class="modal"><div class="modal-content"><div class="modal-header"><span>编辑群成员</span></div><div class="modal-body"><div class="form-group"><label for="member-name-input">名字</label><input type="text" id="member-name-input"></div><div class="form-group"><label for="member-persona-input">人设</label><textarea id="member-persona-input" rows="4"></textarea></div><div class="form-group"><label>头像</label><div class="avatar-upload"><img id="member-avatar-preview"><button onclick="document.getElementById('member-avatar-input').click()">上传头像</button><input type="file" id="member-avatar-input" accept="image/*"></div></div></div><div class="modal-footer"><button class="cancel" id="cancel-member-settings-btn">取消</button><button class="save" id="save-member-settings-btn">保存</button></div></div></div>
+    
+    <div id="custom-modal-overlay">
+        <div id="custom-modal">
+            <div class="custom-modal-header" id="custom-modal-title"></div>
+            <div class="custom-modal-body" id="custom-modal-body"></div>
+            <div class="custom-modal-footer">
+                <button id="custom-modal-cancel">取消</button>
+                <button id="custom-modal-confirm" class="confirm-btn">确定</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="preset-actions-modal" class="modal">
+        <div id="custom-modal" style="width: 250px;">
+            <div class="custom-modal-footer">
+                <button id="preset-action-edit">编辑预设</button>
+                <button id="preset-action-delete" class="btn-danger">删除预设</button>
+                <button id="preset-action-cancel" style="margin-top: 8px; border-radius: 8px; background-color: #f0f0f0;">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="transfer-modal">
+        <div class="transfer-content">
+            <div class="transfer-header">给Ta一个惊喜！</div>
+            <div class="transfer-input-group">
+                <label for="transfer-amount">转账金额</label>
+                <input type="number" id="transfer-amount" placeholder="0.00" min="0" max="9999" step="0.01">
+            </div>
+            <div class="transfer-input-group">
+                <label for="transfer-note">备注 (可选)</label>
+                <input type="text" id="transfer-note" placeholder="留下你的小心思~" maxlength="20">
+            </div>
+            <div class="transfer-actions">
+                <button id="transfer-cancel-btn">取消</button>
+                <button id="transfer-confirm-btn">确认转账</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="battery-alert-modal">
+        <div class="battery-alert-content">
+            <img id="battery-alert-image" src="">
+            <p id="battery-alert-text"></p>
+        </div>
+    </div>
 
     <audio id="audio-player" style="display:none;"></audio>
 
